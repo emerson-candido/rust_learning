@@ -1,19 +1,27 @@
 use std::cmp::PartialEq;
-use std::collections::HashMap;
-use serde::{Serialize};
+//use std::collections::HashMap;
+use serde::{Serialize, Serializer};
 use chrono::{Utc, DateTime};
 use std::env;
 
-use crate::general;
+impl Serialize for LogEventLevel {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+    {
+        // Serialize the enum variant as a string
+        serializer.serialize_str(&format!("{:?}", self))
+    }
+}
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 struct LogMessage {
     timestamp: String,
-    level: String,
+    level: LogEventLevel,
     msg: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 enum LogEventLevel {
     Debug,
     Info,
@@ -39,28 +47,20 @@ pub fn event(
 ) -> () {
     let formatted_timestamp:String = timestamp();
 
-    let log_level :LogEventLevel = get_log_level();
-    println!("{:?}", log_level);
+    let log_level:LogEventLevel = get_log_level();
 
-    let event_level:LogEventLevel = LogEventLevel::from_string(&event_level);
+    let event_level_fmt:LogEventLevel = LogEventLevel::from_string(&event_level);
 
-    let show_event :bool = filter_event(log_level, event_level);
-    println!("{:?}", show_event);
-    //if show_event {
-    //    let log_message = LogMessage {
-    //        timestamp: formatted_timestamp,
-    //        level: event_level.to_string(),
-    //        msg: message.to_string(),
-    //    };
+    let show_event :bool = filter_event(log_level, event_level_fmt);
+    if show_event {
+        let log_message = LogMessage {
+            timestamp: formatted_timestamp,
+            level: event_level_fmt,
+            msg: message.to_string(),
+        };
 
-    //    let log_message: String = message_format(log_message);
-    //    println!("{}", log_message)
-    //}
-}
-
-impl PartialEq for LogEventLevel {
-    fn eq(&self, other: &Self) -> bool {
-        todo!()
+        let log_message: String = message_format(log_message);
+        println!("{}", log_message)
     }
 }
 
@@ -76,12 +76,6 @@ fn filter_event(log_level: LogEventLevel, event_level: LogEventLevel) -> bool {
 fn get_log_level() -> LogEventLevel{
     let log_level_str :String = env::var("LOG_LEVEL").unwrap_or(String::from("Info"));
     let log_level:LogEventLevel = LogEventLevel::from_string(&log_level_str);
-    log_level
-}
-
-fn old_get_log_level() -> String{
-    let args_values:HashMap<String, String> = general::args::get_args();
-    let log_level:String = args_values.get("log_level").unwrap().to_string();
     log_level
 }
 
