@@ -1,0 +1,14 @@
+[package]
+name = "prometheus_metrics"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+prometheus = "0.13.4"
+prometheus-hyper = "0.1.5"
+warp = "0.3.1"
+http = "0.2.12"
+tokio = "1.37.0"
+tracing = "0.1.40"
+tracing-subscriber = "0.3.18"
+log = "0.4.21"
